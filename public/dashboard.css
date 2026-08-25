@@ -1,0 +1,415 @@
+:root {
+  --verde: #00843D;
+  --verde-escuro: #00301A;
+  --amarelo: #FFCC00;
+  --fundo: #0B1512;
+  --fundo-card: #142620;
+  --texto: #F2F5F3;
+  --texto-suave: #9FB3AB;
+  --borda: #223B32;
+  --vermelho: #E74C3C;
+  --laranja: #F39C12;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+.topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(180deg, var(--verde) 0%, var(--verde-escuro) 130%);
+  padding: clamp(14px, 2vw, 28px) clamp(20px, 3vw, 48px);
+}
+
+.topo-esquerda {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 1.6vw, 22px);
+}
+
+.logo-cim {
+  height: clamp(34px, 4.2vw, 58px);
+  width: auto;
+  display: block;
+}
+.logo-cim.oculto { display: none; }
+
+.titulo {
+  font-size: clamp(20px, 2.6vw, 38px);
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ffffff;
+}
+
+.subtitulo-linha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.subtitulo {
+  font-size: clamp(13px, 1.3vw, 20px);
+  color: #DFF3E7;
+}
+
+.seletor-base {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: clamp(12px, 1.1vw, 16px);
+  font-family: inherit;
+  cursor: pointer;
+}
+.seletor-base:hover { background: rgba(255, 255, 255, 0.2); }
+.seletor-base option { color: #0B1512; }
+
+.topo-direita {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.logo-petrobras-card {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 5px 12px;
+  line-height: 0;
+}
+.logo-petrobras-card.oculto { display: none; }
+
+.logo-petrobras {
+  height: clamp(18px, 2vw, 28px);
+  width: auto;
+  display: block;
+}
+
+.relogio {
+  font-size: clamp(22px, 2.8vw, 42px);
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.ultima-atualizacao {
+  font-size: clamp(11px, 1vw, 15px);
+  color: #DFF3E7;
+  margin-top: 2px;
+}
+
+.divisor-amarelo {
+  height: 5px;
+  background: var(--amarelo);
+}
+
+.conteudo {
+  padding: clamp(16px, 2.4vw, 40px);
+  display: grid;
+  gap: clamp(14px, 1.6vw, 26px);
+}
+
+.carregando, .erro {
+  text-align: center;
+  font-size: clamp(16px, 1.6vw, 24px);
+  color: var(--texto-suave);
+  padding: 60px 0;
+}
+
+.erro { color: var(--vermelho); }
+
+.faixa-evento {
+  border-radius: 10px;
+  padding: clamp(14px, 1.6vw, 24px) clamp(18px, 2vw, 30px);
+  border-left: 8px solid var(--amarelo);
+  background: #1c1a0d;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.faixa-evento .icone { font-size: clamp(28px, 3vw, 46px); }
+
+.faixa-evento .texto strong {
+  display: block;
+  font-size: clamp(14px, 1.4vw, 20px);
+  margin-bottom: 4px;
+}
+
+.faixa-evento .texto span {
+  font-size: clamp(13px, 1.2vw, 17px);
+  color: var(--texto-suave);
+}
+
+.faixa-evento.nivel-alto { border-left-color: var(--vermelho); background: #2a1512; }
+.faixa-evento.nivel-medio { border-left-color: var(--laranja); background: #2a1f0f; }
+.faixa-evento.nivel-baixo { border-left-color: var(--verde); background: #10241a; }
+
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: clamp(14px, 1.6vw, 24px);
+}
+
+.card {
+  background: var(--fundo-card);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  padding: clamp(16px, 1.8vw, 26px);
+}
+
+.card .rotulo {
+  font-size: clamp(11px, 1vw, 14px);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--texto-suave);
+  margin-bottom: 8px;
+}
+
+.card .valor {
+  font-size: clamp(26px, 3vw, 44px);
+  font-weight: 700;
+}
+
+.card .detalhe {
+  font-size: clamp(11px, 1vw, 14px);
+  color: var(--texto-suave);
+  margin-top: 6px;
+}
+
+.secao-periodos {
+  background: var(--fundo-card);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  padding: clamp(16px, 1.8vw, 26px);
+}
+
+.secao-periodos h3 {
+  margin: 0 0 14px 0;
+  font-size: clamp(14px, 1.3vw, 19px);
+  color: var(--amarelo);
+  font-weight: 600;
+}
+
+table.tabela-periodos {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: clamp(12px, 1.05vw, 16px);
+}
+
+table.tabela-periodos th {
+  text-align: left;
+  color: var(--texto-suave);
+  font-weight: 600;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--borda);
+}
+
+table.tabela-periodos td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--borda);
+}
+
+.avisos-inmet {
+  display: grid;
+  gap: 10px;
+}
+
+.aviso-item {
+  border-left: 6px solid var(--vermelho);
+  background: #241412;
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: clamp(12px, 1.05vw, 16px);
+}
+
+.aviso-item .sev {
+  font-weight: 700;
+}
+
+.rodape {
+  text-align: center;
+  color: var(--texto-suave);
+  font-size: clamp(10px, 0.85vw, 13px);
+  padding: 10px 20px 26px 20px;
+}
+
+/* Barra de ações (canto inferior direito) — sempre visível e legível de
+   longe, pensada para uma TV de sala de operação (não é um ícone discreto). */
+.barra-acoes {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 40;
+}
+
+.botao-acao {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--borda);
+  background: var(--fundo-card);
+  color: var(--texto);
+  font-size: clamp(13px, 1.1vw, 16px);
+  font-weight: 600;
+  padding: 10px 18px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.botao-acao:hover { transform: translateY(-2px); background: #1b3229; }
+.botao-acao-icone { font-size: 1.15em; }
+
+.botao-acao-primaria {
+  background: var(--verde);
+  border-color: var(--verde);
+  color: #ffffff;
+}
+.botao-acao-primaria:hover { background: #009c47; }
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.overlay.oculto { display: none; }
+
+.modal {
+  background: var(--fundo-card);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  padding: 28px 30px;
+  width: min(420px, 90vw);
+}
+.modal h2 { margin: 0 0 10px 0; font-size: 20px; color: var(--amarelo); }
+.modal p { font-size: 13px; color: var(--texto-suave); margin: 0 0 16px 0; }
+.modal input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--borda);
+  background: #0e1a16;
+  color: var(--texto);
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+.modal-mensagem { min-height: 20px; font-size: 12.5px; color: var(--vermelho); margin-bottom: 6px; }
+.modal-botoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+
+.botao-primario, .botao-secundario {
+  padding: 9px 18px;
+  border-radius: 6px;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+.botao-primario { background: var(--verde); color: #fff; font-weight: 600; }
+.botao-primario:disabled { opacity: 0.5; cursor: default; }
+.botao-secundario { background: transparent; color: var(--texto-suave); border: 1px solid var(--borda); }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  background: var(--fundo-card);
+  border: 1px solid var(--borda);
+  border-left: 5px solid var(--verde);
+  padding: 14px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  max-width: min(560px, 90vw);
+  z-index: 60;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+.toast.erro { border-left-color: var(--vermelho); }
+.toast.oculto { display: none; }
+
+/* Chips de destinatários exibidos sempre no painel principal */
+.chips-destinatarios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip-destinatario {
+  background: #0e1a16;
+  border: 1px solid var(--borda);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: clamp(11px, 1vw, 14px);
+  color: var(--texto);
+}
+
+/* Modal de gerenciamento de responsáveis */
+.modal-responsaveis { width: min(520px, 92vw); }
+.modal-responsaveis h2 span { color: var(--texto); }
+
+.resp-lista {
+  list-style: none;
+  margin: 0 0 16px 0;
+  padding: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  display: grid;
+  gap: 6px;
+}
+.resp-lista li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0e1a16;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+.resp-lista li.resp-vazio {
+  justify-content: center;
+  color: var(--texto-suave);
+}
+.resp-lista .resp-email {
+  color: var(--texto-suave);
+  font-size: 12.5px;
+  margin-left: 6px;
+}
+.resp-remover {
+  background: transparent;
+  border: none;
+  color: var(--vermelho);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+.resp-remover:hover { opacity: 0.7; }
+
+.resp-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+.resp-form input { margin-bottom: 0; }
+.resp-form button { white-space: nowrap; }
+@media (max-width: 520px) {
+  .resp-form { grid-template-columns: 1fr; }
+}

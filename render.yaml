@@ -1,0 +1,30 @@
+# Blueprint do Render (render.com) — permite criar o serviço com
+# "New +" > "Blueprint" apontando pra este repositório, em vez de preencher
+# tudo manualmente na tela. Os valores marcados com "sync: false" são
+# preenchidos por vocês no painel do Render (nunca ficam no repositório).
+services:
+  - type: web
+    name: protocolo-meteorologico-cim
+    env: docker
+    plan: starter # always-on, necessário para o envio automático diário funcionar no horário certo
+    region: oregon
+    healthCheckPath: /api/cidades
+    disk:
+      name: dados-cim
+      mountPath: /home/pptruser/app/data
+      sizeGB: 1
+    envVars:
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+      - key: REPORT_RECIPIENTS
+        sync: false
+      - key: DASHBOARD_PASSWORD
+        sync: false
+      - key: CIDADE
+        value: rio_de_janeiro
+      - key: ENVIO_AUTOMATICO_DIARIO
+        value: "true"
+      - key: HORA_ENVIO_DIARIO
+        value: "06:00"

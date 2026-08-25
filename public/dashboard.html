@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Protocolo Meteorológico CIM</title>
+<link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+
+  <header class="topo">
+    <div class="topo-esquerda">
+      <img id="logo-cim" class="logo-cim oculto" alt="CIM" />
+      <div>
+        <div class="titulo">PROTOCOLO METEOROLÓGICO CIM</div>
+        <div class="subtitulo-linha">
+          <select id="seletor-base" class="seletor-base" title="Trocar de base"></select>
+          <span class="subtitulo" id="subtitulo-cidade">Carregando…</span>
+        </div>
+      </div>
+    </div>
+    <div class="topo-direita">
+      <div id="logo-petrobras-card" class="logo-petrobras-card oculto">
+        <img id="logo-petrobras" class="logo-petrobras" alt="Petrobras" />
+      </div>
+      <div class="relogio" id="relogio">--:--:--</div>
+      <div class="ultima-atualizacao" id="ultima-atualizacao">Última atualização: —</div>
+    </div>
+  </header>
+  <div class="divisor-amarelo"></div>
+
+  <main id="conteudo" class="conteudo">
+    <div class="carregando">Carregando dados meteorológicos…</div>
+  </main>
+
+  <div class="barra-acoes">
+    <button id="botao-responsaveis" class="botao-acao" title="Gerenciar responsáveis">
+      <span class="botao-acao-icone">👥</span> Responsáveis
+    </button>
+    <button id="botao-config" class="botao-acao botao-acao-primaria" title="Gerar e enviar relatório">
+      <span class="botao-acao-icone">⚙</span> Gerar e Enviar
+    </button>
+  </div>
+
+  <div id="overlay-senha" class="overlay oculto">
+    <div class="modal">
+      <h2>Gerar e Enviar Relatório</h2>
+      <p>Digite a senha operacional do CIM para disparar a coleta de dados, gerar o PDF e enviar o e-mail.</p>
+      <input id="input-senha" type="password" placeholder="Senha" autocomplete="off" />
+      <div id="modal-mensagem" class="modal-mensagem"></div>
+      <div class="modal-botoes">
+        <button id="botao-cancelar" class="botao-secundario">Cancelar</button>
+        <button id="botao-confirmar" class="botao-primario">Gerar e Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="overlay-responsaveis" class="overlay oculto">
+    <div class="modal modal-responsaveis">
+      <h2>Gerenciar Responsáveis — <span id="resp-nome-base">—</span></h2>
+      <p>Digite a senha operacional para cadastrar ou remover quem recebe o informativo desta base por e-mail.</p>
+
+      <div id="resp-bloco-senha">
+        <input id="resp-input-senha" type="password" placeholder="Senha" autocomplete="off" />
+        <div id="resp-senha-mensagem" class="modal-mensagem"></div>
+        <div class="modal-botoes">
+          <button id="resp-botao-cancelar" class="botao-secundario">Cancelar</button>
+          <button id="resp-botao-desbloquear" class="botao-primario">Desbloquear</button>
+        </div>
+      </div>
+
+      <div id="resp-bloco-gestao" class="oculto">
+        <ul id="resp-lista" class="resp-lista"></ul>
+
+        <form id="resp-form" class="resp-form">
+          <input id="resp-input-nome" type="text" placeholder="Nome do responsável" autocomplete="off" />
+          <input id="resp-input-email" type="email" placeholder="E-mail" autocomplete="off" />
+          <button type="submit" class="botao-primario">Adicionar</button>
+        </form>
+        <div id="resp-form-mensagem" class="modal-mensagem"></div>
+
+        <div class="modal-botoes">
+          <button id="resp-botao-fechar" class="botao-secundario">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast oculto"></div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
