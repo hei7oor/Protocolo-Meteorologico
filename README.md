@@ -218,26 +218,35 @@ iframe**.
    vão pro repositório.
 2. Em [render.com](https://render.com), crie o serviço:
    - **New + → Blueprint**, apontando pro repositório — ele lê o
-     `render.yaml` já incluído neste projeto e configura tudo (Docker, disco
-     persistente para `data/responsaveis.json`, variáveis de ambiente).
-   - Ou, manualmente: **New + → Web Service**, ambiente **Docker**
-     (o `Dockerfile` já está pronto — usa a imagem oficial do Puppeteer para
-     o Chrome funcionar sem erros de biblioteca faltando).
+     `render.yaml` já incluído neste projeto e configura tudo (Docker,
+     plano gratuito, variáveis de ambiente).
+   - Ou, manualmente: **New + → Web Service**, ambiente **Docker**, plano
+     **Free** (o `Dockerfile` já está pronto — usa a imagem oficial do
+     Puppeteer para o Chrome funcionar sem erros de biblioteca faltando).
 3. No painel do Render, preencha as variáveis de ambiente marcadas como
    secretas: `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `REPORT_RECIPIENTS`,
    `DASHBOARD_PASSWORD` (troque o valor padrão "Marciana").
 4. Ao terminar o deploy, você recebe uma URL pública fixa, por exemplo:
    `https://protocolo-meteorologico-cim.onrender.com`
 
-**Plano do Render:** o plano `starter` (pago, sem hibernar) é o recomendado
-no `render.yaml` porque o envio automático diário (`node-cron`) só dispara
-se o servidor estiver rodando no horário configurado — no plano gratuito o
-serviço "dorme" após alguns minutos sem acesso e o agendamento não dispara
-de forma confiável. Se quiser ficar no plano gratuito mesmo assim, dá pra
-compensar com um "despertador" externo gratuito (ex.: GitHub Actions
-agendado ou cron-job.org) fazendo um `POST` diário para
-`/api/gerar-relatorio` com a senha do painel no horário desejado — me avise
-se quiser esse roteiro em vez do plano pago.
+**Plano gratuito do Render — duas limitações a saber:**
+1. O serviço "dorme" depois de ~15 min sem acesso, e o envio automático
+   diário (`node-cron`) só dispara se o processo estiver rodando na hora
+   configurada. Para garantir o envio mesmo dormindo, configure um
+   "despertador" externo gratuito (GitHub Actions agendado ou
+   [cron-job.org](https://cron-job.org)) fazendo um `POST` diário para
+   `/api/gerar-relatorio` com a senha do painel, no horário desejado — me
+   avise se quiser ajuda montando isso.
+2. Sem disco persistente (também pago no Render), o cadastro de
+   responsáveis (`data/responsaveis.json`) volta ao vazio a cada novo
+   deploy (`git push`) — recadastre pelo botão 👥 do painel depois de cada
+   deploy. Se no futuro quiserem persistência sem cartão, dá pra trocar por
+   um serviço externo gratuito (Google Sheets, KV store gratuito etc.) —
+   não é o padrão atual do projeto.
+
+Se puderem usar cartão futuramente, o plano `starter` (pago, sem hibernar)
+elimina os dois problemas acima — é só trocar `plan: free` por
+`plan: starter` no `render.yaml` e adicionar de volta o bloco `disk:`.
 
 ### 9.2 Embutir no Streamlit
 
