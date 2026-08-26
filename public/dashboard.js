@@ -53,6 +53,16 @@ function nivelEvento(evento) {
   return "baixo";
 }
 
+// Se nenhuma fonte respondeu com temperatura/umidade, os valores chegam
+// nulos — exibir "null° / null°C" numa TV de operação seria pior que não
+// informar nada.
+function parOuTraco(minimo, maximo, sufixoMin, sufixoMax) {
+  if (minimo == null && maximo == null) return "—";
+  const a = minimo == null ? "—" : `${minimo}${sufixoMin}`;
+  const b = maximo == null ? "—" : `${maximo}${sufixoMax}`;
+  return `${a} / ${b}`;
+}
+
 // Cores das faixas do índice UV, seguindo a convenção visual da OMS
 // (verde/amarelo/laranja/vermelho/violeta).
 function corUv(categoria) {
@@ -121,12 +131,12 @@ function renderPainel(report) {
       </div>
       <div class="card">
         <div class="rotulo">Temperatura</div>
-        <div class="valor">${report.tempMin}° / ${report.tempMax}°C</div>
+        <div class="valor">${parOuTraco(report.tempMin, report.tempMax, "°", "°C")}</div>
         <div class="detalhe">mínima / máxima prevista</div>
       </div>
       <div class="card">
         <div class="rotulo">Umidade relativa</div>
-        <div class="valor">${report.umidadeMin}% / ${report.umidadeMax}%</div>
+        <div class="valor">${parOuTraco(report.umidadeMin, report.umidadeMax, "%", "%")}</div>
         <div class="detalhe">mínima / máxima prevista</div>
       </div>
       <div class="card">

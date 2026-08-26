@@ -88,7 +88,7 @@ function tabelaVento(periodos) {
         .map(
           (p, i) => `<tr class="${i % 2 === 1 ? "zebra" : ""}">
             <td>${esc(p.periodo)}</td><td>${esc(p.direcao)}</td><td>${esc(p.intensidade)}</td>
-            <td>${p.rajadaMaxKmh ?? "—"} km/h</td><td>${esc(p.referenciaInmet)}</td>
+            <td>${p.rajadaMaxKmh == null ? "—" : p.rajadaMaxKmh + " km/h"}</td><td>${esc(p.referenciaInmet)}</td>
           </tr>`
         )
         .join("")}
@@ -103,7 +103,9 @@ function tabelaChuva(periodos) {
       ${periodos
         .map(
           (p, i) => `<tr class="${i % 2 === 1 ? "zebra" : ""}">
-            <td>${esc(p.periodo)}</td><td>${p.probabilidade ?? "—"}%</td><td>${p.precipitacaoMm ?? "—"} mm</td>
+            <td>${esc(p.periodo)}</td>
+            <td>${p.probabilidade == null ? "—" : p.probabilidade + "%"}</td>
+            <td>${p.precipitacaoMm == null ? "—" : p.precipitacaoMm + " mm"}</td>
             <td>${esc(p.resumoInmet)}</td>
           </tr>`
         )

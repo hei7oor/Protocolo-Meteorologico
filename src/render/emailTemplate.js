@@ -18,6 +18,15 @@ function celulaMetrica(rotulo, valor) {
   </td>`;
 }
 
+// Se nenhuma fonte respondeu com temperatura/umidade, os valores chegam
+// nulos — exibir "null° / null°C" no e-mail seria pior que não informar.
+function parOuTraco(minimo, maximo, sufixoMin, sufixoMax) {
+  if (minimo == null && maximo == null) return "—";
+  const a = minimo == null ? "—" : `${minimo}${sufixoMin}`;
+  const b = maximo == null ? "—" : `${maximo}${sufixoMax}`;
+  return `${a} / ${b}`;
+}
+
 // A rajada pode não existir (ex.: Open-Meteo indisponível e só o INMET
 // respondeu — o INMET não fornece rajada em km/h). Nesse caso mostra "—"
 // em vez de "0 km/h", que seria lido como previsão real de calmaria.
@@ -60,8 +69,8 @@ function renderEmailHtml(r) {
         <tr><td style="padding:10px 20px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:4px;">
             <tr>
-              ${celulaMetrica("Temp. mín/máx", `${r.tempMin}° / ${r.tempMax}°C`)}
-              ${celulaMetrica("Umidade mín/máx", `${r.umidadeMin}% / ${r.umidadeMax}%`)}
+              ${celulaMetrica("Temp. mín/máx", parOuTraco(r.tempMin, r.tempMax, "°", "°C"))}
+              ${celulaMetrica("Umidade mín/máx", parOuTraco(r.umidadeMin, r.umidadeMax, "%", "%"))}
               ${celulaMetrica("Rajada máx.", rajadaMaximaTexto(r))}
             </tr>
             <tr>
