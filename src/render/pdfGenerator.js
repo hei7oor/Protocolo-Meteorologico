@@ -7,7 +7,15 @@ function getBrowser() {
   if (!navegadorPromise) {
     navegadorPromise = puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        // Containers Docker (Render, etc.) costumam limitar /dev/shm a
+        // ~64MB — sem essa flag o Chrome pode travar/matar a aba ao
+        // renderizar o PDF, causando "Navigation timeout" no page.setContent.
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+      ],
     });
   }
   return navegadorPromise;
