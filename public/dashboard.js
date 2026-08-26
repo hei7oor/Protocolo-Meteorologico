@@ -53,6 +53,18 @@ function nivelEvento(evento) {
   return "baixo";
 }
 
+// Cores das faixas do índice UV, seguindo a convenção visual da OMS
+// (verde/amarelo/laranja/vermelho/violeta).
+function corUv(categoria) {
+  switch (categoria) {
+    case "extremo": return "#8E44AD";
+    case "muito_alto": return "#E74C3C";
+    case "alto": return "#F39C12";
+    case "moderado": return "#F1C40F";
+    default: return "#2ECC71";
+  }
+}
+
 function corSeveridade(severidade = "") {
   const s = severidade.toLowerCase();
   if (s.includes("grande perigo")) return "#7B241C";
@@ -122,7 +134,59 @@ function renderPainel(report) {
         <div class="valor">${rajadaMax === null ? "—" : rajadaMax + " km/h"}</div>
         <div class="detalhe">${rajadaMax === null ? "sem dado nas fontes disponíveis" : "pico previsto no dia"}</div>
       </div>
+      ${
+        report.qualidadeAr?.uvMax != null
+          ? `<div class="card">
+        <div class="rotulo">Índice UV máx.</div>
+        <div class="valor" style="color:${corUv(report.qualidadeAr.uvClassificacao.categoria)}">${report.qualidadeAr.uvMax}</div>
+        <div class="detalhe">${report.qualidadeAr.uvClassificacao.nivel}${report.qualidadeAr.horaPicoUv ? " · pico ~" + report.qualidadeAr.horaPicoUv : ""}</div>
+      </div>`
+          : ""
+      }
+      ${
+        report.qualidadeAr?.pm25Medio != null
+          ? `<div class="card">
+        <div class="rotulo">Qualidade do ar (PM2,5)</div>
+        <div class="valor" style="font-size:clamp(20px,2.2vw,32px)">${report.qualidadeAr.pm25Classificacao.nivel}</div>
+        <div class="detalhe">${report.qualidadeAr.pm25Medio} µg/m³ · diretriz OMS: 15</div>
+      </div>`
+          : ""
+      }
+      ${
+        report.mar?.alturaMaxDiaM != null
+          ? `<div class="card">
+        <div class="rotulo">Mar — altura máx. de onda</div>
+        <div class="valor">${report.mar.alturaMaxDiaM} m</div>
+        <div class="detalhe">${report.mar.estadoMarDia}${report.mar.temperaturaMarC != null ? " · água " + report.mar.temperaturaMarC + "°C" : ""}</div>
+      </div>`
+          : ""
+      }
     </div>
+
+    ${
+      report.mar?.periodos?.length
+        ? `<div class="secao-periodos">
+      <h3>Condições de mar por período${report.mar.referenciaPonto ? ` <span style="color:var(--texto-suave);font-weight:400">— ponto: ${report.mar.referenciaPonto}</span>` : ""}</h3>
+      <table class="tabela-periodos">
+        <thead><tr><th>Período</th><th>Estado do mar</th><th>Altura máx.</th><th>Período de onda</th><th>Direção</th><th>Marulho</th></tr></thead>
+        <tbody>
+          ${report.mar.periodos
+            .map(
+              (p) => `<tr>
+                <td>${p.periodo}</td>
+                <td>${p.estadoMar}</td>
+                <td>${p.alturaMaxM == null ? "—" : p.alturaMaxM + " m"}</td>
+                <td>${p.periodoOndaS == null ? "—" : p.periodoOndaS + " s"}</td>
+                <td>${p.direcaoOnda}</td>
+                <td>${p.marulhoMaxM == null ? "—" : p.marulhoMaxM + " m"}</td>
+              </tr>`
+            )
+            .join("")}
+        </tbody>
+      </table>
+    </div>`
+        : ""
+    }
 
     <div class="secao-periodos">
       <h3>Vento e chuva por período</h3>
@@ -160,7 +224,8 @@ function renderPainel(report) {
     </div>
 
     <div class="rodape">
-      Fontes: Open-Meteo · INMET (previsão oficial e avisos de perigo). Dados de referência apenas — consulte também Alerta Rio/COR-Rio/Defesa Civil local para confirmação operacional.
+      Fontes: Open-Meteo (previsão numérica${report.mar ? ", ondas" : ""}, índice UV e qualidade do ar) · INMET (previsão oficial e avisos de perigo).
+      Dados de referência apenas — consulte também Alerta Rio/COR-Rio/Defesa Civil local para confirmação operacional.
       Painel atualizado automaticamente a cada 10 minutos.
     </div>
   `;

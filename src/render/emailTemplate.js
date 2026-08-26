@@ -18,6 +18,16 @@ function celulaMetrica(rotulo, valor) {
   </td>`;
 }
 
+// A rajada pode não existir (ex.: Open-Meteo indisponível e só o INMET
+// respondeu — o INMET não fornece rajada em km/h). Nesse caso mostra "—"
+// em vez de "0 km/h", que seria lido como previsão real de calmaria.
+function rajadaMaximaTexto(r) {
+  const valores = r.ventoPorPeriodo
+    .map((p) => p.rajadaMaxKmh)
+    .filter((v) => v !== null && v !== undefined);
+  return valores.length ? `${Math.max(...valores)} km/h` : "—";
+}
+
 function corSeveridade(severidade = "") {
   const s = severidade.toLowerCase();
   if (s.includes("grande perigo")) return "#7B241C";
@@ -52,7 +62,12 @@ function renderEmailHtml(r) {
             <tr>
               ${celulaMetrica("Temp. mín/máx", `${r.tempMin}° / ${r.tempMax}°C`)}
               ${celulaMetrica("Umidade mín/máx", `${r.umidadeMin}% / ${r.umidadeMax}%`)}
-              ${celulaMetrica("Rajada máx.", `${r.ventoPorPeriodo.reduce((m, p) => Math.max(m, p.rajadaMaxKmh || 0), 0)} km/h`)}
+              ${celulaMetrica("Rajada máx.", rajadaMaximaTexto(r))}
+            </tr>
+            <tr>
+              ${celulaMetrica("Índice UV", r.qualidadeAr?.uvMax != null ? `${r.qualidadeAr.uvMax} <span style="font-size:12px;font-weight:normal;">(${esc(r.qualidadeAr.uvClassificacao.nivel)})</span>` : "—")}
+              ${celulaMetrica("Ar (PM2,5)", r.qualidadeAr?.pm25Medio != null ? `<span style="font-size:15px;">${esc(r.qualidadeAr.pm25Classificacao.nivel)}</span>` : "—")}
+              ${celulaMetrica("Mar — onda máx.", r.mar?.alturaMaxDiaM != null ? `${r.mar.alturaMaxDiaM} m` : "—")}
             </tr>
           </table>
         </td></tr>

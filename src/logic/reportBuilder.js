@@ -1,5 +1,7 @@
 const { buscarOpenMeteo } = require("../sources/openMeteo");
 const { buscarPrevisaoInmet, buscarAvisosInmet } = require("../sources/inmet");
+const { buscarMar } = require("../sources/marine");
+const { buscarQualidadeAr } = require("../sources/airQuality");
 const {
   avaliarRiscos,
   recomendacoesDeslocamento,
@@ -79,6 +81,27 @@ async function montarRelatorio(cidade) {
     avisosColeta.push(`INMET (avisos) indisponível no momento da coleta: ${erro.message}`);
   }
 
+  // Condições de mar: só para bases costeiras/portuárias/offshore.
+  let mar = null;
+  if (cidade.costeira) {
+    const ponto = cidade.pontoMar || { latitude: cidade.latitude, longitude: cidade.longitude };
+    try {
+      mar = await buscarMar(ponto.latitude, ponto.longitude);
+      if (cidade.pontoMar?.referencia) mar.referenciaPonto = cidade.pontoMar.referencia;
+    } catch (erro) {
+      avisosColeta.push(`Condições de mar indisponíveis no momento da coleta: ${erro.message}`);
+    }
+  }
+
+  // Qualidade do ar e índice UV: relevantes em todas as bases (exposição de
+  // equipes em trabalho externo e qualidade do ar respirável).
+  let qualidadeAr = null;
+  try {
+    qualidadeAr = await buscarQualidadeAr(cidade.latitude, cidade.longitude);
+  } catch (erro) {
+    avisosColeta.push(`Qualidade do ar / índice UV indisponíveis no momento da coleta: ${erro.message}`);
+  }
+
   if (!openMeteo && !inmetPrevisao) {
     throw new Error(
       "Nenhuma fonte meteorológica respondeu (Open-Meteo e INMET indisponíveis). Verifique a conexão com a internet e tente novamente."
@@ -119,6 +142,8 @@ async function montarRelatorio(cidade) {
     temTempestadeHoje: base.temTempestadeHoje,
     periodos: base.periodos,
     avisosInmet,
+    mar,
+    qualidadeAr,
   });
 
   const janelaChuva = ["manha", "tarde", "noite"]
@@ -179,6 +204,16 @@ async function montarRelatorio(cidade) {
   if (openMeteo) fontes.push({ nome: "Open-Meteo — previsão numérica", url: openMeteo.url });
   if (inmetPrevisao) fontes.push({ nome: "INMET — previsão oficial", url: inmetPrevisao.url });
   if (inmetAvisos) fontes.push({ nome: "INMET — avisos de perigo ativos", url: inmetAvisos.url });
+  if (mar)
+    fontes.push({
+      nome: `Open-Meteo Marine — ondas, marulho e temperatura do mar${mar.referenciaPonto ? ` (ponto: ${mar.referenciaPonto})` : ""}`,
+      url: mar.url,
+    });
+  if (qualidadeAr)
+    fontes.push({
+      nome: "Open-Meteo Air Quality — material particulado e índice UV",
+      url: qualidadeAr.url,
+    });
   if (cidade.links?.alertaRio)
     fontes.push({
       nome: "Alerta Rio / Defesa Civil Municipal (verificação manual — sem API pública estável)",
@@ -228,6 +263,8 @@ async function montarRelatorio(cidade) {
     tabelaTemperaturaUmidade,
     ventoPorPeriodo,
     chuvaPorPeriodo,
+    mar,
+    qualidadeAr,
     eventoMaisRelevante,
     avisosInmet,
     divergencias,

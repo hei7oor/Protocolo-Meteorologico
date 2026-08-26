@@ -9,6 +9,7 @@
 const CIDADES = {
   rio_de_janeiro: {
     chave: "rio_de_janeiro",
+    costeira: true,
     nome: "Rio de Janeiro",
     uf: "RJ",
     latitude: -22.9068,
@@ -27,6 +28,7 @@ const CIDADES = {
 
   macae: {
     chave: "macae",
+    costeira: true,
     nome: "Macaé",
     uf: "RJ",
     latitude: -22.2828305,
@@ -40,6 +42,7 @@ const CIDADES = {
 
   cabiunas: {
     chave: "cabiunas",
+    costeira: true,
     nome: "Cabiúnas (Terminal)",
     uf: "RJ",
     // Coordenadas do Terminal de Cabiúnas (Petrobras/Transpetro), distrito de
@@ -83,19 +86,21 @@ const CIDADES = {
 
   santos: {
     chave: "santos",
+    costeira: true,
     nome: "Santos",
     uf: "SP",
     latitude: -23.9609448,
     longitude: -46.3166316,
-    codigoIbge: "3513504",
+    codigoIbge: "3548500",
     links: {
-      inmet: "https://previsao.inmet.gov.br/3513504",
+      inmet: "https://previsao.inmet.gov.br/3548500",
       defesaCivilTelefone: "199",
     },
   },
 
   aracaju: {
     chave: "aracaju",
+    costeira: true,
     nome: "Aracaju",
     uf: "SE",
     latitude: -10.9162061,
@@ -109,10 +114,16 @@ const CIDADES = {
 
   linhares: {
     chave: "linhares",
+    costeira: true,
     nome: "Linhares",
     uf: "ES",
     latitude: -19.3796775,
     longitude: -40.0610087,
+    // O centro de Linhares fica ~50 km da costa, fora da grade do modelo de
+    // ondas. O litoral do município (foz do Rio Doce, em Regência) é o ponto
+    // usado só para os dados de mar — a previsão de tempo continua sendo a
+    // do município.
+    pontoMar: { latitude: -19.6486, longitude: -39.8258, referencia: "Regência (foz do Rio Doce)" },
     codigoIbge: "3203205",
     links: {
       inmet: "https://previsao.inmet.gov.br/3203205",
@@ -122,6 +133,7 @@ const CIDADES = {
 
   anchieta: {
     chave: "anchieta",
+    costeira: true,
     nome: "Anchieta",
     uf: "ES",
     latitude: -20.8057672,
@@ -135,6 +147,7 @@ const CIDADES = {
 
   vitoria: {
     chave: "vitoria",
+    costeira: true,
     nome: "Vitória",
     uf: "ES",
     latitude: -20.3200917,
@@ -161,6 +174,7 @@ const CIDADES = {
 
   salvador: {
     chave: "salvador",
+    costeira: true,
     nome: "Salvador",
     uf: "BA",
     latitude: -12.9777,

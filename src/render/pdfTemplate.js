@@ -112,6 +112,56 @@ function tabelaChuva(periodos) {
   </table>`;
 }
 
+function tabelaMar(mar) {
+  if (!mar?.periodos?.length) return "";
+  return `<h4 class="subsecao">Condições de Mar${mar.referenciaPonto ? ` (ponto de referência: ${esc(mar.referenciaPonto)})` : ""}</h4>
+  <table>
+    <thead><tr><th>Período</th><th>Estado do mar</th><th>Altura máx.</th><th>Período de onda</th><th>Direção</th><th>Marulho</th></tr></thead>
+    <tbody>
+      ${mar.periodos
+        .map(
+          (p, i) => `<tr class="${i % 2 === 1 ? "zebra" : ""}">
+            <td>${esc(p.periodo)}</td><td>${esc(p.estadoMar)}</td>
+            <td>${p.alturaMaxM == null ? "—" : p.alturaMaxM + " m"}</td>
+            <td>${p.periodoOndaS == null ? "—" : p.periodoOndaS + " s"}</td>
+            <td>${esc(p.direcaoOnda)}</td>
+            <td>${p.marulhoMaxM == null ? "—" : p.marulhoMaxM + " m"}</td>
+          </tr>`
+        )
+        .join("")}
+    </tbody>
+  </table>
+  ${mar.temperaturaMarC != null ? `<p style="font-size:10pt;">Temperatura média da superfície do mar: <strong>${mar.temperaturaMarC}°C</strong>.</p>` : ""}`;
+}
+
+function tabelaQualidadeAr(qa) {
+  if (!qa) return "";
+  return `<h4 class="subsecao">Índice UV e Qualidade do Ar</h4>
+  <table>
+    <thead><tr><th>Indicador</th><th>Valor</th><th>Classificação</th><th>Referência</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Índice UV (máximo do dia)</td>
+        <td>${qa.uvMax ?? "—"}${qa.horaPicoUv ? ` (pico ~${esc(qa.horaPicoUv)})` : ""}</td>
+        <td>${esc(qa.uvClassificacao?.nivel)}</td>
+        <td>Faixas OMS: 8+ muito alto, 11+ extremo</td>
+      </tr>
+      <tr class="zebra">
+        <td>Material particulado fino (PM2,5)</td>
+        <td>${qa.pm25Medio == null ? "—" : qa.pm25Medio + " µg/m³"}</td>
+        <td>${esc(qa.pm25Classificacao?.nivel)}</td>
+        <td>Diretriz OMS 2021: até 15 µg/m³</td>
+      </tr>
+      <tr>
+        <td>Material particulado inalável (PM10)</td>
+        <td>${qa.pm10Medio == null ? "—" : qa.pm10Medio + " µg/m³"}</td>
+        <td>—</td>
+        <td>Diretriz OMS 2021: até 45 µg/m³</td>
+      </tr>
+    </tbody>
+  </table>`;
+}
+
 function renderPdfHtml(r) {
   const logos = logosComoDataUri();
   const logoCimHtml = logos.cim
@@ -269,6 +319,9 @@ function renderPdfHtml(r) {
 
   <h4 class="subsecao">Chuva por Período</h4>
   ${tabelaChuva(r.chuvaPorPeriodo)}
+
+  ${tabelaMar(r.mar)}
+  ${tabelaQualidadeAr(r.qualidadeAr)}
 
   ${blocoEventoExtremo(r.eventoMaisRelevante)}
   ${blocoAvisosInmet(r.avisosInmet)}
