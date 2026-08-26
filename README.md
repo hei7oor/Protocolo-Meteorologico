@@ -127,6 +127,8 @@ kiosk também ao iniciar a sessão.
 |---|---|---|
 | **Open-Meteo** (`api.open-meteo.com`) | Base numérica: temperatura, umidade, vento, chuva por período | Gratuita, sem chave, sem cadastro |
 | **INMET** (`apiprevmet3.inmet.gov.br`) | Previsão oficial (validação cruzada) + avisos de perigo ativos (equivalente a alertas de Defesa Civil coordenados nacionalmente) | Gratuita, sem chave, API pública oficial |
+| **Open-Meteo Marine** (`marine-api.open-meteo.com`) | Altura/período/direção de onda, marulho e temperatura do mar — **só nas 9 bases costeiras** | Gratuita, sem chave. Atende ao item do protocolo original que pedia dados de mar (OCEANOP) |
+| **Open-Meteo Air Quality** (`air-quality-api.open-meteo.com`) | Índice UV (exposição de equipes externas) e material particulado PM2,5/PM10 | Gratuita, sem chave |
 
 Fontes citadas no protocolo original mas **sem API pública gratuita e
 estável** (por isso não integradas na coleta automática — o relatório
@@ -137,6 +139,16 @@ usada nos modelos de referência):
   JSON documentado e estável.
 - **Climatempo** — sem API pública gratuita.
 
+Fontes **testadas e descartadas** (registrado para não retestar à toa):
+- **Estações automáticas do INMET** (`apitempo.inmet.gov.br`) — daria dados
+  observados em tempo real (não só previsão), mas o endpoint de observações
+  responde HTTP 204 vazio mesmo para datas passadas. Fonte instável demais
+  para o protocolo depender dela.
+- **Open-Meteo Flood** (vazão de rios) — funciona, mas entrega só a vazão
+  absoluta (ex.: 82.984 m³/s em Manaus) sem referência histórica que
+  permita dizer se está acima do normal. Sem esse contexto, o número não é
+  acionável num painel de operação.
+
 Se no futuro vocês tiverem uma chave de API paga/cadastrada (OpenWeatherMap,
 HG Brasil, Climatempo Corporate etc.), dá para adicionar como mais uma fonte
 em `src/sources/` seguindo o mesmo padrão de `openMeteo.js`.
@@ -144,21 +156,68 @@ em `src/sources/` seguindo o mesmo padrão de `openMeteo.js`.
 ## 5. Como o "evento mais relevante" é decidido
 
 Motor de regras em `src/logic/riskEngine.js`, com limiares documentados no
-topo do arquivo (chuva intensa ≥ 20 mm ou 70% de probabilidade, vento forte
-≥ 60 km/h de rajada, calor extremo ≥ 37°C etc.), mais qualquer aviso oficial
-ativo do INMET para o município. As recomendações das seções 2 e 3 do PDF
-são montadas dinamicamente a partir das categorias de risco detectadas —
-nunca uma lista genérica fixa.
+topo do arquivo, mais qualquer aviso oficial ativo do INMET para o
+município. As recomendações das seções 2 e 3 do PDF são montadas
+dinamicamente a partir das categorias de risco detectadas — nunca uma lista
+genérica fixa.
+
+| Categoria | Limiar | Base da referência |
+|---|---|---|
+| Chuva intensa | ≥ 20 mm ou ≥ 70% de probabilidade | calibração operacional |
+| Vento forte | ≥ 60 km/h de rajada | calibração operacional |
+| Calor extremo | ≥ 37 °C | calibração operacional |
+| Baixa umidade | ≤ 20% | calibração operacional |
+| Índice UV alto | ≥ 8 (extremo ≥ 11) | faixas da OMS |
+| Mar grosso | ≥ 2,5 m (moderado ≥ 1,5 m) | escala Douglas |
+| Qualidade do ar ruim | PM2,5 > 25 µg/m³ | diretriz OMS 2021 (limite 15) |
 
 Os limiares são um ponto de partida razoável; ajustem os valores em
 `LIMIARES` conforme a experiência operacional do CIM.
 
-## 6. Adicionar outra instalação/cidade
+## 6. Bases cadastradas e como adicionar outra
 
-Edite `src/config/cities.js` e adicione um novo bloco com `nome`, `uf`,
+### Bases atuais (todas verificadas contra a API oficial do IBGE)
+
+| Base | UF | Código IBGE | Mar |
+|---|---|---|---|
+| Rio de Janeiro | RJ | 3304557 | sim |
+| Macaé | RJ | 3302403 | sim |
+| Cabiúnas (Terminal) | RJ | 3302403 | sim |
+| Brasília | DF | 5300108 | — |
+| Manaus | AM | 1302603 | — |
+| Santos | SP | 3548500 | sim |
+| Aracaju | SE | 2800308 | sim |
+| Linhares | ES | 3203205 | sim (ponto próprio) |
+| Anchieta | ES | 3200409 | sim |
+| Vitória | ES | 3205309 | sim |
+| Araucária | PR | 4101804 | — |
+| Salvador | BA | 2927408 | sim |
+
+Dois casos merecem atenção ao mexer nesse cadastro:
+- **Cabiúnas** é um distrito de Macaé, não um município. Usa coordenadas
+  próprias do terminal (mais precisas para o modelo numérico) mas o código
+  IBGE de Macaé, porque a previsão oficial do INMET é por município.
+- **Linhares** tem litoral (foz do Rio Doce), mas o centro do município
+  fica fora da grade do modelo de ondas. Por isso tem `pontoMar` próprio
+  apontando para Regência — só os dados de mar usam esse ponto.
+
+### Adicionar uma nova base
+
+Edite `src/config/cities.js` e adicione um bloco com `nome`, `uf`,
 `latitude`, `longitude` e `codigoIbge` (código IBGE de 7 dígitos — o mesmo
-usado em `https://previsao.inmet.gov.br/<codigo>`). Depois rode com
-`CIDADE=<chave>` no `.env`, ou `node src/cli.js --cidade=<chave>`.
+usado em `https://previsao.inmet.gov.br/<codigo>`). Se a base for costeira,
+adicione `costeira: true`.
+
+⚠️ **Confira o código IBGE antes de confiar nele** — cidades vizinhas têm
+códigos parecidos e o erro é silencioso (a previsão simplesmente vem do
+município errado). Verifique assim:
+
+```bash
+curl -s https://servicodados.ibge.gov.br/api/v1/localidades/municipios/3548500
+```
+
+Depois rode com `CIDADE=<chave>` no `.env`, ou
+`node src/cli.js --cidade=<chave>`.
 
 ## 7. Identidade visual
 
