@@ -127,10 +127,28 @@ async function buscarOpenMeteo(latitude, longitude) {
   });
 
   const url = `https://api.open-meteo.com/v1/forecast?${params.toString()}`;
-  const resposta = await fetch(url, { signal: AbortSignal.timeout(15000) });
-  if (!resposta.ok) {
-    throw new Error(`Open-Meteo respondeu HTTP ${resposta.status}`);
+
+  // A API gratuita limita requisições por IP. Em hospedagem compartilhada
+  // (Render, etc.) o IP de saída é usado por muitos clientes, então HTTP 429
+  // acontece com frequência — vale a pena tentar de novo antes de desistir,
+  // em vez de cair direto no modo "só INMET" (que não tem rajada de vento).
+  let resposta;
+  for (let tentativa = 0; tentativa < 3; tentativa++) {
+    resposta = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    if (resposta.ok) break;
+    if (resposta.status !== 429) {
+      throw new Error(`Open-Meteo respondeu HTTP ${resposta.status}`);
+    }
+    if (tentativa < 2) {
+      await new Promise((r) => setTimeout(r, 2000 * (tentativa + 1)));
+    }
   }
+  if (!resposta.ok) {
+    throw new Error(
+      `Open-Meteo respondeu HTTP ${resposta.status} (limite de requisições por IP) após 3 tentativas`
+    );
+  }
+
   const json = await resposta.json();
   const horas = json.hourly;
   const dia = json.daily;

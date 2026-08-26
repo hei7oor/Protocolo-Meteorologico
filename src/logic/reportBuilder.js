@@ -93,14 +93,18 @@ async function montarRelatorio(cidade) {
     tempMax: inmetPrevisao.periodos.tarde?.tempMax ?? null,
     umidadeMin: inmetPrevisao.periodos.tarde?.umidadeMin ?? null,
     umidadeMax: inmetPrevisao.periodos.manha?.umidadeMax ?? null,
-    precipitacaoTotalMm: 0,
-    probabilidadeChuvaMax: 0,
-    rajadaMaxKmh: 0,
+    precipitacaoTotalMm: null,
+    probabilidadeChuvaMax: null,
+    rajadaMaxKmh: null,
     temTempestadeHoje: false,
+    // null (e não 0) é essencial aqui: o INMET não fornece rajada em km/h nem
+    // probabilidade de chuva numérica. Zerar esses campos faria o painel
+    // exibir "0 km/h" / "0%" como se fossem previsões reais de calmaria,
+    // quando na verdade o dado não existe — o painel renderiza null como "—".
     periodos: {
-      manha: { periodo: "Manhã", direcao: inmetPrevisao.periodos.manha?.direcaoVento || "—", intensidadeVento: inmetPrevisao.periodos.manha?.intensidadeVento || "—", rajadaMaxKmh: 0, probabilidadeChuva: 0, tempestade: false },
-      tarde: { periodo: "Tarde", direcao: inmetPrevisao.periodos.tarde?.direcaoVento || "—", intensidadeVento: inmetPrevisao.periodos.tarde?.intensidadeVento || "—", rajadaMaxKmh: 0, probabilidadeChuva: 0, tempestade: false },
-      noite: { periodo: "Noite", direcao: inmetPrevisao.periodos.noite?.direcaoVento || "—", intensidadeVento: inmetPrevisao.periodos.noite?.intensidadeVento || "—", rajadaMaxKmh: 0, probabilidadeChuva: 0, tempestade: false },
+      manha: { periodo: "Manhã", direcao: inmetPrevisao.periodos.manha?.direcaoVento || "—", intensidadeVento: inmetPrevisao.periodos.manha?.intensidadeVento || "—", rajadaMaxKmh: null, probabilidadeChuva: null, precipitacaoMm: null, tempestade: false },
+      tarde: { periodo: "Tarde", direcao: inmetPrevisao.periodos.tarde?.direcaoVento || "—", intensidadeVento: inmetPrevisao.periodos.tarde?.intensidadeVento || "—", rajadaMaxKmh: null, probabilidadeChuva: null, precipitacaoMm: null, tempestade: false },
+      noite: { periodo: "Noite", direcao: inmetPrevisao.periodos.noite?.direcaoVento || "—", intensidadeVento: inmetPrevisao.periodos.noite?.intensidadeVento || "—", rajadaMaxKmh: null, probabilidadeChuva: null, precipitacaoMm: null, tempestade: false },
     },
   };
 

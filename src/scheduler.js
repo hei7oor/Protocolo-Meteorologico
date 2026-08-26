@@ -69,4 +69,58 @@ function iniciarAgendamentoDiario(onResultado) {
   return tarefa;
 }
 
-module.exports = { iniciarAgendamentoDiario };
+/**
+ * Dispara o informativo de todas as bases uma única vez, em um horário
+ * específico de hoje. Serve para testes ("manda hoje às 08:30") sem alterar
+ * o agendamento diário permanente. Controlado por env:
+ *   ENVIO_UNICO_HOJE=08:30
+ * Se o horário já passou, não envia nada (evita disparo imediato indesejado
+ * ao reiniciar o servidor no fim do dia).
+ */
+function agendarEnvioUnicoHoje(onResultado) {
+  const horario = process.env.ENVIO_UNICO_HOJE;
+  if (!horario) return null;
+
+  const [hora, minuto] = horario.split(":").map((v) => parseInt(v, 10));
+  if (Number.isNaN(hora) || Number.isNaN(minuto)) {
+    console.warn(`[CIM] ENVIO_UNICO_HOJE inválido ("${horario}") — ignorado.`);
+    return null;
+  }
+
+  const agoraBrasilia = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
+  );
+  const alvo = new Date(agoraBrasilia);
+  alvo.setHours(hora, minuto, 0, 0);
+
+  const milissegundosAteAlvo = alvo.getTime() - agoraBrasilia.getTime();
+  if (milissegundosAteAlvo <= 0) {
+    console.log(
+      `[CIM] ENVIO_UNICO_HOJE=${horario} já passou (agora ${agoraBrasilia.toLocaleTimeString("pt-BR")}) — nenhum envio único agendado.`
+    );
+    return null;
+  }
+
+  const minutosRestantes = Math.round(milissegundosAteAlvo / 60000);
+  console.log(
+    `[CIM] Envio ÚNICO agendado para hoje às ${horario} (em ~${minutosRestantes} min), bases: ${basesParaEnvioDiario().join(", ")}.`
+  );
+
+  return setTimeout(async () => {
+    const bases = basesParaEnvioDiario();
+    console.log(`[CIM] Disparando envio único de ${horario} para: ${bases.join(", ")}...`);
+    for (const cidadeChave of bases) {
+      try {
+        const resultado = await executarPipeline({ cidadeChave, enviarEmail: true });
+        console.log(`[CIM] Envio único concluído (${cidadeChave}): ${resultado.arquivoPdf}`);
+        onResultado?.(null, resultado);
+      } catch (erro) {
+        console.error(`[CIM] Falha no envio único (${cidadeChave}):`, erro.message);
+        onResultado?.(erro, null);
+      }
+    }
+    console.log("[CIM] Envio único finalizado. O agendamento diário segue ativo.");
+  }, milissegundosAteAlvo);
+}
+
+module.exports = { iniciarAgendamentoDiario, agendarEnvioUnicoHoje };

@@ -154,6 +154,27 @@ html, body {
   color: var(--texto-suave);
 }
 
+.faixa-coleta {
+  border-radius: 10px;
+  padding: clamp(12px, 1.4vw, 20px) clamp(16px, 1.8vw, 26px);
+  border-left: 8px solid var(--laranja);
+  background: #2a1f0f;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.faixa-coleta .icone { font-size: clamp(22px, 2.4vw, 34px); }
+.faixa-coleta .texto strong {
+  display: block;
+  font-size: clamp(13px, 1.3vw, 18px);
+  margin-bottom: 4px;
+  color: var(--laranja);
+}
+.faixa-coleta .texto span {
+  font-size: clamp(12px, 1.1vw, 15px);
+  color: var(--texto-suave);
+}
+
 .faixa-evento.nivel-alto { border-left-color: var(--vermelho); background: #2a1512; }
 .faixa-evento.nivel-medio { border-left-color: var(--laranja); background: #2a1f0f; }
 .faixa-evento.nivel-baixo { border-left-color: var(--verde); background: #10241a; }

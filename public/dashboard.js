@@ -68,7 +68,10 @@ function renderPainel(report) {
   const evento = report.eventoMaisRelevante;
   const nivel = nivelEvento(evento);
 
-  const rajadaMax = report.ventoPorPeriodo.reduce((m, p) => Math.max(m, p.rajadaMaxKmh || 0), 0);
+  const rajadasConhecidas = report.ventoPorPeriodo
+    .map((p) => p.rajadaMaxKmh)
+    .filter((v) => v !== null && v !== undefined);
+  const rajadaMax = rajadasConhecidas.length ? Math.max(...rajadasConhecidas) : null;
 
   const avisosHtml = (report.avisosInmet || [])
     .map(
@@ -79,7 +82,18 @@ function renderPainel(report) {
     )
     .join("");
 
+  const avisosColetaHtml = (report.avisosColeta || []).length
+    ? `<div class="faixa-coleta">
+        <div class="icone">📡</div>
+        <div class="texto">
+          <strong>Atenção: coleta parcial de dados</strong>
+          <span>${report.avisosColeta.map((a) => a).join(" · ")} Os campos sem dado aparecem como "—".</span>
+        </div>
+      </div>`
+    : "";
+
   conteudo.innerHTML = `
+    ${avisosColetaHtml}
     <div class="faixa-evento nivel-${nivel}">
       <div class="icone">${nivel === "alto" ? "⛔" : nivel === "medio" ? "⚠️" : "✅"}</div>
       <div class="texto">
@@ -105,8 +119,8 @@ function renderPainel(report) {
       </div>
       <div class="card">
         <div class="rotulo">Rajada de vento máx.</div>
-        <div class="valor">${rajadaMax} km/h</div>
-        <div class="detalhe">pico previsto no dia</div>
+        <div class="valor">${rajadaMax === null ? "—" : rajadaMax + " km/h"}</div>
+        <div class="detalhe">${rajadaMax === null ? "sem dado nas fontes disponíveis" : "pico previsto no dia"}</div>
       </div>
     </div>
 
@@ -121,9 +135,9 @@ function renderPainel(report) {
               return `<tr>
                 <td>${v.periodo}</td>
                 <td>${v.direcao} · ${v.intensidade}</td>
-                <td>${v.rajadaMaxKmh ?? "—"} km/h</td>
-                <td>${c?.probabilidade ?? "—"}%</td>
-                <td>${c?.precipitacaoMm ?? "—"} mm</td>
+                <td>${v.rajadaMaxKmh == null ? "—" : v.rajadaMaxKmh + " km/h"}</td>
+                <td>${c?.probabilidade == null ? "—" : c.probabilidade + "%"}</td>
+                <td>${c?.precipitacaoMm == null ? "—" : c.precipitacaoMm + " mm"}</td>
               </tr>`;
             })
             .join("")}
