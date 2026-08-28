@@ -200,44 +200,69 @@ async function montarRelatorio(cidade) {
     };
   });
 
-  const fontes = [];
-  if (openMeteo) fontes.push({ nome: "Open-Meteo — previsão numérica", url: openMeteo.url });
-  if (inmetPrevisao) fontes.push({ nome: "INMET — previsão oficial", url: inmetPrevisao.url });
-  if (inmetAvisos) fontes.push({ nome: "INMET — avisos de perigo ativos", url: inmetAvisos.url });
+  // Fontes listadas por NOME, sem URL: as chamadas de API carregam a query
+  // completa (dezenas de parâmetros) e poluíam o documento sem agregar nada
+  // para quem lê o informativo.
+  //
+  // Separadas em dois grupos para deixar explícito o que entrou na coleta
+  // automática e o que ainda depende de conferência humana — a transparência
+  // sobre o que NÃO é automatizado é exigência do protocolo original.
+  const fontesAutomatizadas = [];
+  if (openMeteo)
+    fontesAutomatizadas.push({
+      nome: "Open-Meteo",
+      uso: "Previsão numérica: temperatura, umidade, vento e chuva por período",
+    });
+  if (inmetPrevisao)
+    fontesAutomatizadas.push({
+      nome: "INMET — Previsão",
+      uso: "Previsão oficial do município (validação cruzada)",
+    });
+  if (inmetAvisos)
+    fontesAutomatizadas.push({
+      nome: "INMET — Avisos de Perigo",
+      uso: "Avisos oficiais ativos para o município",
+    });
   if (mar)
-    fontes.push({
-      nome: `Open-Meteo Marine — ondas, marulho e temperatura do mar${mar.referenciaPonto ? ` (ponto: ${mar.referenciaPonto})` : ""}`,
-      url: mar.url,
+    fontesAutomatizadas.push({
+      nome: "Open-Meteo Marine",
+      uso: `Ondas, marulho e temperatura da superfície do mar${mar.referenciaPonto ? ` (ponto de referência: ${mar.referenciaPonto})` : ""}`,
     });
   if (qualidadeAr)
-    fontes.push({
-      nome: "Open-Meteo Air Quality — material particulado e índice UV",
-      url: qualidadeAr.url,
+    fontesAutomatizadas.push({
+      nome: "Open-Meteo Air Quality",
+      uso: "Material particulado (PM2,5 e PM10) e índice UV",
     });
+
+  const fontesManuais = [];
   if (cidade.links?.alertaRio)
-    fontes.push({
-      nome: "Alerta Rio / Defesa Civil Municipal (verificação manual — sem API pública estável)",
-      url: cidade.links.alertaRio,
+    fontesManuais.push({
+      nome: "Alerta Rio / Defesa Civil Municipal",
+      uso: "Boletins e estágios locais — sem API pública estável",
     });
   if (cidade.links?.corRio)
-    fontes.push({
-      nome: "COR-Rio — estágios operacionais (verificação manual — sem API pública estável)",
-      url: cidade.links.corRio,
+    fontesManuais.push({
+      nome: "COR-Rio",
+      uso: "Estágio operacional da cidade — sem API pública estável",
     });
   if (cidade.links?.codesal)
-    fontes.push({
-      nome: "CODESAL (verificação manual — sem API pública estável)",
-      url: cidade.links.codesal,
+    fontesManuais.push({
+      nome: "CODESAL",
+      uso: "Defesa Civil de Salvador — sem API pública estável",
     });
   if (cidade.links?.climatempo)
-    fontes.push({
-      nome: "Climatempo (verificação manual — sem API pública gratuita)",
-      url: cidade.links.climatempo,
+    fontesManuais.push({
+      nome: "Climatempo",
+      uso: "Cruzamento comercial — sem API pública gratuita",
     });
-  fontes.push({
-    nome: "Windy.com: inacessível para integração automática (SPA sem API pública gratuita). Não incluído nesta coleta automatizada.",
-    url: "https://www.windy.com",
+  fontesManuais.push({
+    nome: "Windy.com",
+    uso: "Não integrado: aplicação JavaScript sem API pública gratuita",
   });
+
+  // Mantido para compatibilidade com o rodapé do PDF, que cita as fontes
+  // principais em uma linha só.
+  const fontes = [...fontesAutomatizadas, ...fontesManuais];
 
   return {
     cidade: { chave: cidade.chave, nome: cidade.nome, uf: cidade.uf },
@@ -272,6 +297,8 @@ async function montarRelatorio(cidade) {
     deslocamento,
     edificacao,
     fontes,
+    fontesAutomatizadas,
+    fontesManuais,
     geradoEmISO: dataNow.toISOString(),
   };
 }

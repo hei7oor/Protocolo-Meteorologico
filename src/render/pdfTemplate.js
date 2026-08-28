@@ -164,6 +164,44 @@ function tabelaQualidadeAr(qa) {
   </table>`;
 }
 
+// Fontes apresentadas em tabela, por nome e uso — sem URL: as chamadas de
+// API trazem a query completa e poluíam o documento sem servir ao leitor.
+function blocoFontes(r) {
+  // Relatórios antigos (antes da separação em dois grupos) só tinham `fontes`.
+  const automatizadas = r.fontesAutomatizadas || r.fontes || [];
+  const manuais = r.fontesManuais || [];
+
+  const linhas = (lista) =>
+    lista
+      .map(
+        (f, i) => `<tr class="${i % 2 === 1 ? "zebra" : ""}">
+          <td style="width:32%;"><strong>${esc(f.nome)}</strong></td>
+          <td>${esc(f.uso || "")}</td>
+        </tr>`
+      )
+      .join("");
+
+  return `<h4 class="subsecao">Fontes Consultadas</h4>
+  ${
+    automatizadas.length
+      ? `<p style="font-size:10pt;margin:6px 0 4px 0;"><strong>Integradas à coleta automática:</strong></p>
+  <table>
+    <thead><tr><th>Fonte</th><th>Uso neste informativo</th></tr></thead>
+    <tbody>${linhas(automatizadas)}</tbody>
+  </table>`
+      : ""
+  }
+  ${
+    manuais.length
+      ? `<p style="font-size:10pt;margin:10px 0 4px 0;"><strong>Verificação manual (não integradas):</strong></p>
+  <table>
+    <thead><tr><th>Fonte</th><th>Observação</th></tr></thead>
+    <tbody>${linhas(manuais)}</tbody>
+  </table>`
+      : ""
+  }`;
+}
+
 function renderPdfHtml(r) {
   const logos = logosComoDataUri();
   const logoCimHtml = logos.cim
@@ -330,12 +368,7 @@ function renderPdfHtml(r) {
   ${blocoDivergencias(r.divergencias)}
   ${blocoAvisosColeta(r.avisosColeta)}
 
-  <div class="fontes">
-    <strong>Fontes consultadas:</strong>
-    <ul>
-      ${r.fontes.map((f) => `<li>${esc(f.nome)}${f.url ? ` — <a href="${esc(f.url)}">${esc(f.url)}</a>` : ""}</li>`).join("")}
-    </ul>
-  </div>
+  ${blocoFontes(r)}
 
   <h3 class="secao">2. Recomendações de Segurança — Deslocamento</h3>
   <p>Considerando o horário da consulta (${esc(r.horaConsulta)}), as recomendações abaixo projetam os riscos meteorológicos para o restante do dia.</p>
@@ -363,9 +396,11 @@ function headerTemplateVazio() {
 }
 
 function footerTemplate(r) {
-  const fontesResumo = r.fontes
+  // Só as fontes efetivamente integradas entram no rodapé — citar as de
+  // verificação manual aqui daria a entender que foram consultadas.
+  const fontesResumo = (r.fontesAutomatizadas || r.fontes || [])
     .slice(0, 3)
-    .map((f) => f.nome.split("(")[0].trim())
+    .map((f) => f.nome.split("—")[0].trim())
     .join(", ");
   return `<div style="width:100%;font-family:Arial,sans-serif;font-size:7.5pt;color:#666;padding:0 36px;">
     <div style="border-top:2px solid ${brand.amarelo};padding-top:4px;display:flex;justify-content:space-between;">
