@@ -123,4 +123,82 @@ function agendarEnvioUnicoHoje(onResultado) {
   }, milissegundosAteAlvo);
 }
 
-module.exports = { iniciarAgendamentoDiario, agendarEnvioUnicoHoje };
+/**
+ * Monitor de vigilância: verifica as fontes de tempos em tempos e envia
+ * e-mail SÓ quando aparece condição grave nova. Controlado por env:
+ *   MONITOR_ALERTAS=false          (desliga; padrão: ligado)
+ *   INTERVALO_MONITOR_MIN=60       (de quantos em quantos minutos verificar)
+ *   JANELA_MONITOR=06:00-22:00     (faixa horária; fora dela não verifica)
+ *   BASES_MONITOR_ALERTAS=a,b      (opcional; padrão: todas)
+ *
+ * A janela horária existe porque um e-mail às 3h da manhã não gera ação —
+ * só ruído. Eventos da madrugada aparecem no informativo das 07:30.
+ */
+function iniciarMonitorAlertas(onResultado) {
+  if (process.env.MONITOR_ALERTAS === "false") {
+    console.log("[CIM] Monitor de alertas desativado via MONITOR_ALERTAS=false.");
+    return null;
+  }
+
+  const intervalo = parseInt(process.env.INTERVALO_MONITOR_MIN || "60", 10);
+  if (Number.isNaN(intervalo) || intervalo < 10) {
+    console.warn(`[CIM] INTERVALO_MONITOR_MIN inválido ou muito curto — usando 60 min.`);
+  }
+  const minutos = Number.isNaN(intervalo) || intervalo < 10 ? 60 : intervalo;
+
+  const janela = (process.env.JANELA_MONITOR || "06:00-22:00").split("-");
+  const [horaIni, horaFim] = janela.map((h) => parseInt(h.split(":")[0], 10));
+
+  const expressao = minutos >= 60 ? `0 */${Math.floor(minutos / 60)} * * *` : `*/${minutos} * * * *`;
+
+  const tarefa = cron.schedule(
+    expressao,
+    async () => {
+      const agora = new Date(
+        new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
+      );
+      const h = agora.getHours();
+      if (!Number.isNaN(horaIni) && !Number.isNaN(horaFim) && (h < horaIni || h >= horaFim)) {
+        return; // fora da janela de vigilância
+      }
+
+      try {
+        const { verificarAlertas } = require("./logic/alertWatcher");
+        const { enviarAlertaPorEmail } = require("./email/sendAlert");
+
+        const resultado = await verificarAlertas();
+        if (resultado.totalNovos === 0) {
+          console.log(`[CIM] Monitor: nenhuma condição nova (${resultado.verificadoEm}).`);
+          return;
+        }
+
+        console.log(
+          `[CIM] Monitor: ${resultado.totalNovos} alerta(s) novo(s) em ${resultado.porBase.length} base(s).`
+        );
+        for (const base of resultado.porBase) {
+          try {
+            const envio = await enviarAlertaPorEmail(base);
+            console.log(
+              `[CIM] Alerta enviado (${base.chave}): ${base.alertas.map((a) => a.tipo).join(", ")} -> ${envio.destinatarios.length} destinatário(s).`
+            );
+            onResultado?.(null, { base, envio });
+          } catch (erro) {
+            console.error(`[CIM] Falha ao enviar alerta (${base.chave}):`, erro.message);
+            onResultado?.(erro, null);
+          }
+        }
+      } catch (erro) {
+        console.error("[CIM] Falha no monitor de alertas:", erro.message);
+        onResultado?.(erro, null);
+      }
+    },
+    { timezone: "America/Sao_Paulo" }
+  );
+
+  console.log(
+    `[CIM] Monitor de alertas ativo: verificação a cada ${minutos} min, das ${janela[0]} às ${janela[1]}.`
+  );
+  return tarefa;
+}
+
+module.exports = { iniciarAgendamentoDiario, agendarEnvioUnicoHoje, iniciarMonitorAlertas };

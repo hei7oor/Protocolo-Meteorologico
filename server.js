@@ -6,7 +6,11 @@ const fs = require("fs");
 const { getCidade, CIDADES } = require("./src/config/cities");
 const { montarRelatorio } = require("./src/logic/reportBuilder");
 const { executarPipeline, PASTA_SAIDA } = require("./src/pipeline");
-const { iniciarAgendamentoDiario } = require("./src/scheduler");
+const {
+  iniciarAgendamentoDiario,
+  agendarEnvioUnicoHoje,
+  iniciarMonitorAlertas,
+} = require("./src/scheduler");
 const responsaveis = require("./src/config/recipients");
 const { arquivosLogos } = require("./src/config/logos");
 
@@ -218,4 +222,6 @@ app.delete("/api/responsaveis", (req, res) => {
 app.listen(PORTA, () => {
   console.log(`[CIM] Painel disponível em http://localhost:${PORTA}`);
   iniciarAgendamentoDiario();
+  agendarEnvioUnicoHoje();
+  iniciarMonitorAlertas();
 });
