@@ -38,7 +38,8 @@ html, body {
 }
 
 .logo-cim {
-  height: clamp(34px, 4.2vw, 58px);
+  /* Bem maior: o painel é visto de longe, na TV da sala de operação. */
+  height: clamp(64px, 8vw, 120px);
   width: auto;
   display: block;
 }

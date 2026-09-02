@@ -261,7 +261,7 @@ function renderPdfHtml(r) {
     top: 14px;
     left: 20px;
   }
-  .header-logo-cim img { height: 30px; display: block; }
+  .header-logo-cim img { height: 58px; display: block; }
   .header-logo-petrobras {
     position: absolute;
     top: 14px;
