@@ -1,32 +1,22 @@
-const nodemailer = require("nodemailer");
 const { renderEmailHtml } = require("../render/emailTemplate");
 const { listarPorCidade } = require("../config/recipients");
-
-function criarTransportador() {
-  const usuario = process.env.GMAIL_USER;
-  const senha = process.env.GMAIL_APP_PASSWORD;
-  if (!usuario || !senha) {
-    throw new Error(
-      "GMAIL_USER / GMAIL_APP_PASSWORD não configurados no arquivo .env. Veja README.md."
-    );
-  }
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: { user: usuario, pass: senha },
-  });
-}
+const { criarTransportador, enderecoRemetente } = require("./transport");
 
 // Prioriza os responsáveis cadastrados para a base (painel > Gerenciar
-// responsáveis). Se nenhum estiver cadastrado, cai para REPORT_RECIPIENTS /
-// GMAIL_USER do .env — mantém o comportamento antigo funcionando até que
-// alguém cadastre os responsáveis de fato pela base.
+// responsáveis). Se nenhum estiver cadastrado, cai para REPORT_RECIPIENTS do
+// .env — mantém o envio funcionando até que alguém cadastre os responsáveis
+// de fato pela base.
 function listaDestinatarios(cidadeChave) {
   if (cidadeChave) {
     const cadastrados = listarPorCidade(cidadeChave).map((r) => r.email);
     if (cadastrados.length > 0) return cadastrados;
   }
 
-  const raw = process.env.REPORT_RECIPIENTS || process.env.GMAIL_USER || "";
+  const raw =
+    process.env.REPORT_RECIPIENTS ||
+    process.env.EMAIL_REMETENTE ||
+    process.env.GMAIL_USER ||
+    "";
   return raw
     .split(",")
     .map((e) => e.trim())
@@ -45,7 +35,7 @@ async function enviarRelatorioPorEmail(report, pdfBuffer) {
   const assunto = `Informativo Meteorológico — ${report.cidade.nome} — ${report.dataFormatadaCurta}`;
 
   const info = await transportador.sendMail({
-    from: `"Protocolo Meteorológico CIM" <${process.env.GMAIL_USER}>`,
+    from: enderecoRemetente().formatado,
     to: destinatarios.join(", "),
     subject: assunto,
     html: renderEmailHtml(report),

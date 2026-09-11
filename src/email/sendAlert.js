@@ -1,15 +1,6 @@
-const nodemailer = require("nodemailer");
 const { renderAlertEmailHtml, assuntoAlerta } = require("../render/alertEmailTemplate");
 const { listaDestinatarios } = require("./sendReport");
-
-function criarTransportador() {
-  const usuario = process.env.GMAIL_USER;
-  const senha = process.env.GMAIL_APP_PASSWORD;
-  if (!usuario || !senha) {
-    throw new Error("GMAIL_USER / GMAIL_APP_PASSWORD não configurados no .env.");
-  }
-  return nodemailer.createTransport({ service: "gmail", auth: { user: usuario, pass: senha } });
-}
+const { criarTransportador, enderecoRemetente } = require("./transport");
 
 /**
  * Envia um alerta para os responsáveis da base afetada.
@@ -28,7 +19,9 @@ async function enviarAlertaPorEmail(base) {
 
   const transportador = criarTransportador();
   const info = await transportador.sendMail({
-    from: `"Alerta CIM" <${process.env.GMAIL_USER}>`,
+    // Nome distinto do boletim diário: ajuda a identificar na caixa de
+    // entrada que não é a mensagem de rotina.
+    from: `"Alerta CIM" <${enderecoRemetente().email}>`,
     to: destinatarios.join(", "),
     subject: assuntoAlerta(base),
     html: renderAlertEmailHtml(base),
