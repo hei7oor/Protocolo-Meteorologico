@@ -4,6 +4,7 @@ const { getCidade } = require("./config/cities");
 const { montarRelatorio } = require("./logic/reportBuilder");
 const { gerarPdfBuffer } = require("./render/pdfGenerator");
 const { enviarRelatorioPorEmail } = require("./email/sendReport");
+const ged = require("./integrations/sharepointGed");
 
 const PASTA_SAIDA = path.join(__dirname, "..", "output");
 
@@ -71,11 +72,25 @@ async function executarPipeline({ cidadeChave, enviarEmail = true } = {}) {
     envio = await enviarRelatorioPorEmail(report, pdfBuffer);
   }
 
+  // Sobe pro GED só junto do envio "de verdade" (não em --sem-email de
+  // teste) — evita poluir o SharePoint corporativo a cada teste local.
+  // Indisponibilidade do GED nunca derruba o e-mail, que já foi enviado
+  // (ou está sendo, em paralelo) com o buffer em memória.
+  let ged_ = null;
+  if (enviarEmail && ged.destinoConfigurado()) {
+    try {
+      ged_ = await ged.enviarInformativo(pdfBuffer, `${report.nomeArquivoBase}.pdf`, report.cidade.nome);
+    } catch (erro) {
+      report.avisosColeta.push(`Não foi possível gravar no GED SharePoint: ${erro.message}`);
+    }
+  }
+
   return {
     report,
     arquivoPdf: caminhoArquivo ? path.basename(caminhoArquivo) : null,
     caminhoArquivo,
     envio,
+    ged: ged_,
   };
 }
 

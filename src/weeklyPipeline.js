@@ -5,6 +5,7 @@ const puppeteer = require("puppeteer");
 const { montarRelatorioSemanal } = require("./logic/weeklyBuilder");
 const { renderWeeklyPdfHtml, weeklyFooterTemplate } = require("./render/weeklyPdfTemplate");
 const { renderWeeklyEmailHtml } = require("./render/weeklyEmailTemplate");
+const ged = require("./integrations/sharepointGed");
 
 const PASTA_SAIDA = path.join(__dirname, "..", "output");
 
@@ -59,7 +60,17 @@ async function executarPipelineSemanal({ bases, dias = 7, enviarEmail = false, s
     envio = await enviarRelatorioSemanalPorEmail(relatorio, pdfBuffer, emailHtml);
   }
 
-  return { relatorio, caminhoPdf, caminhoHtmlEmail, caminhoHtmlPdf, envio };
+  // Mesma regra do informativo diário: só sobe pro GED junto do envio real.
+  let gedEnvio = null;
+  if (enviarEmail && ged.destinoConfigurado()) {
+    try {
+      gedEnvio = await ged.enviarInformativo(pdfBuffer, `${relatorio.nomeArquivoBase}.pdf`, "Relatorios Semanais");
+    } catch (erro) {
+      console.error("[CIM] Falha ao gravar relatório semanal no GED:", erro.message);
+    }
+  }
+
+  return { relatorio, caminhoPdf, caminhoHtmlEmail, caminhoHtmlPdf, envio, ged: gedEnvio };
 }
 
 module.exports = { executarPipelineSemanal, gerarPdfSemanalBuffer, PASTA_SAIDA };

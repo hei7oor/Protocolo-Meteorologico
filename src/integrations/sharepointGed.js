@@ -24,10 +24,11 @@ function credenciaisConfiguradas() {
   );
 }
 
+// O que o envio de arquivo (enviarArquivo) realmente usa é o ID da
+// biblioteca — hostname/site path só servem para o diagnóstico inicial
+// (resolverSite/listarBibliotecas), não para o upload do dia a dia.
 function destinoConfigurado() {
-  return Boolean(
-    process.env.SHAREPOINT_SITE_HOSTNAME && process.env.SHAREPOINT_SITE_PATH
-  );
+  return credenciaisConfiguradas() && Boolean(process.env.SHAREPOINT_DRIVE_ID);
 }
 
 // Cache simples em memória: o token dura ~1h, não faz sentido pedir um novo
@@ -137,11 +138,69 @@ async function enviarArquivo(driveId, caminhoNoDrive, conteudo) {
   return { id: resultado.id, url: resultado.webUrl };
 }
 
+/**
+ * Cria uma pasta na raiz de uma biblioteca (ou dentro de outra pasta, se
+ * `pastaPaiCaminho` for informado). Idempotente: se a pasta já existir,
+ * não dá erro — só devolve os dados da pasta existente.
+ */
+async function criarPasta(driveId, nome, pastaPaiCaminho) {
+  const destino = pastaPaiCaminho
+    ? `/drives/${driveId}/root:/${pastaPaiCaminho.split("/").map(encodeURIComponent).join("/")}:/children`
+    : `/drives/${driveId}/root/children`;
+
+  try {
+    const resultado = await chamarGraph(destino, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: nome,
+        folder: {},
+        "@microsoft.graph.conflictBehavior": "fail",
+      }),
+    });
+    return { id: resultado.id, nome: resultado.name, url: resultado.webUrl, criada: true };
+  } catch (erro) {
+    // HTTP 409 = já existe uma pasta com esse nome — não é erro, é o caso
+    // comum de rodar isso mais de uma vez.
+    if (!erro.message.includes("409")) throw erro;
+    const caminhoCompleto = pastaPaiCaminho ? `${pastaPaiCaminho}/${nome}` : nome;
+    const existente = await chamarGraph(
+      `/drives/${driveId}/root:/${caminhoCompleto.split("/").map(encodeURIComponent).join("/")}`
+    );
+    return { id: existente.id, nome: existente.name, url: existente.webUrl, criada: false };
+  }
+}
+
+/**
+ * Envia um informativo (PDF) para o GED, organizado em
+ * "<SHAREPOINT_PASTA_DESTINO>/<subpasta>/<nomeArquivo>" — subpasta é
+ * normalmente o nome da base, para não misturar os PDFs das 12 instalações
+ * numa lista só.
+ *
+ * Não lança em caso de indisponibilidade do GED: o chamador decide se isso
+ * deve virar um aviso no relatório ou ser só registrado no log — enviar o
+ * e-mail nunca deve ficar refém do SharePoint estar fora do ar.
+ */
+async function enviarInformativo(pdfBuffer, nomeArquivo, subpasta) {
+  if (!destinoConfigurado()) {
+    throw new Error(
+      "GED não configurado (falta SHAREPOINT_DRIVE_ID no .env) — rode node src/cliTestarSharepoint.js para diagnosticar."
+    );
+  }
+  const pastaBase = process.env.SHAREPOINT_PASTA_DESTINO || "Informativos CIM";
+  const caminho = subpasta
+    ? `${pastaBase}/${subpasta}/${nomeArquivo}`
+    : `${pastaBase}/${nomeArquivo}`;
+  return enviarArquivo(process.env.SHAREPOINT_DRIVE_ID, caminho, pdfBuffer);
+}
+
 module.exports = {
   credenciaisConfiguradas,
   destinoConfigurado,
   obterToken,
   resolverSite,
   listarBibliotecas,
+  criarPasta,
   enviarArquivo,
+  enviarInformativo,
 };
