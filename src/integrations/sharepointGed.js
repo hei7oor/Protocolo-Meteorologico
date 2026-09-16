@@ -122,16 +122,27 @@ async function listarBibliotecas(siteId) {
  * @param {string} caminhoNoDrive ex.: "Informativos CIM/2026-09-16.pdf"
  * @param {Buffer} conteudo
  */
-async function enviarArquivo(driveId, caminhoNoDrive, conteudo) {
-  // Upload simples (funciona até 4 MB — nossos PDFs ficam na casa de 1 MB,
-  // então não precisamos da sessão de upload em partes exigida para arquivos
-  // maiores).
+const TIPOS_POR_EXTENSAO = {
+  pdf: "application/pdf",
+  zip: "application/zip",
+  txt: "text/plain",
+  json: "application/json",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+};
+
+async function enviarArquivo(driveId, caminhoNoDrive, conteudo, tipoConteudo) {
+  // Upload simples (funciona até 4 MB — nossos PDFs/zips ficam bem abaixo
+  // disso, então não precisamos da sessão de upload em partes exigida para
+  // arquivos maiores).
+  const extensao = caminhoNoDrive.split(".").pop().toLowerCase();
+  const tipo = tipoConteudo || TIPOS_POR_EXTENSAO[extensao] || "application/octet-stream";
+
   const caminhoCodificado = caminhoNoDrive.split("/").map(encodeURIComponent).join("/");
   const resultado = await chamarGraph(
     `/drives/${driveId}/root:/${caminhoCodificado}:/content`,
     {
       method: "PUT",
-      headers: { "Content-Type": "application/pdf" },
+      headers: { "Content-Type": tipo },
       body: conteudo,
     }
   );
